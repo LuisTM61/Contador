@@ -464,7 +464,7 @@ function addManualEpisode(dateStr, timeStr, notesStr) {
     renderDashboard();
 }
 
-// --- Export Logic ---
+// --- Export & Backup Logic ---
 function exportCSV() {
     if (episodes.length === 0) {
         alert("No hay datos para exportar.");
@@ -490,9 +490,44 @@ function exportCSV() {
     link.setAttribute("href", encodedUri);
     const filename = `frecuencia_export_${new Date().toISOString().slice(0, 10)}.csv`;
     link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
+    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function exportJSON() {
+    if (episodes.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+    const dataStr = JSON.stringify(episodes, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const link = document.createElement("a");
+    link.setAttribute("href", dataUri);
+    link.setAttribute("download", `frecuencia_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (!Array.isArray(imported)) throw new Error("Formato inválido");
+            
+            if (confirm(`Se han encontrado ${imported.length} registros. ¿Deseas reemplazarlos por los actuales?`)) {
+                episodes = imported;
+                saveData();
+                alert("Datos restaurados correctamente.");
+                location.reload(); // Refresh to ensure everything is clean
+            }
+        } catch (err) {
+            alert("Error al importar el archivo: " + err.message);
+        }
+    };
+    reader.readAsText(file);
 }
 
 
@@ -588,10 +623,22 @@ function setupEventListeners() {
         });
     }
 
-    // Export Button Listener
+    // Data Management Listeners
     const btnExport = document.getElementById('btn-export');
-    if (btnExport) {
-        btnExport.addEventListener('click', exportCSV);
+    if (btnExport) btnExport.addEventListener('click', exportCSV);
+
+    const btnBackup = document.getElementById('btn-backup-json');
+    if (btnBackup) btnBackup.addEventListener('click', exportJSON);
+
+    const btnRestore = document.getElementById('btn-restore-json');
+    const inputRestore = document.getElementById('input-restore');
+    if (btnRestore && inputRestore) {
+        btnRestore.addEventListener('click', () => inputRestore.click());
+        inputRestore.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                importJSON(e.target.files[0]);
+            }
+        });
     }
 
     // ... nav btns

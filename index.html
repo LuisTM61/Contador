@@ -105,9 +105,18 @@
                             <strong id="stat-max-interval">--</strong>
                         </div>
                     </div>
-                    <!-- Export button -->
-                    <button id="btn-export" class="btn-secondary">Exportar CSV</button>
+                    <!-- Export and Backup actions -->
+                    <div class="maintenance-actions" style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+                        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Mantenimiento de Datos</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button id="btn-export" class="btn-secondary">Exportar CSV (Excel)</button>
+                            <button id="btn-backup-json" class="btn-secondary" style="background-color: #f8fafc; color: #475569; border: 1px solid #cbd5e1;">Descargar Copia de Seguridad (.json)</button>
+                            <button id="btn-restore-json" class="btn-primary" style="background-color: #0f172a;">Restaurar Copia en este móvil</button>
+                            <input type="file" id="input-restore" accept=".json" style="display: none;">
+                        </div>
+                    </div>
             </section>
+
         </main>
 
         <nav class="app-nav">
