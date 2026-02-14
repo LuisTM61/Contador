@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Seguimiento clínico de episodios">
+    <meta name="theme-color" content="#ffffff">
+    <title>Frecuencia</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Frecuencia</h1>
+        </header>
+
+        <main>
+            <!-- DASHBOARD VIEW -->
+            <section id="dashboard" class="view active">
+
+                <!-- TOP ZONE: Button -->
+                <div class="register-container">
+                    <button id="btn-register" class="btn-circular" aria-label="Registrar Episodio">
+                        <span>+</span>
+                    </button>
+                    <!-- Pulse ring could leverage pseudo-element, keeping minimal markup -->
+                </div>
+
+                <!-- BELOW BUTTON ZONE -->
+                <div class="current-info-card">
+                    <div class="row-date-time">
+                        <span id="last-date">--/--/----</span>
+                        <span id="last-time">--:--</span>
+                    </div>
+
+                    <div class="row-today-count">
+                        <span class="label">Episodios Hoy:</span>
+                        <strong id="today-count" class="value">0</strong>
+                    </div>
+
+                    <div id="current-clock" class="current-clock">--:--:--</div>
+
+                    <div class="row-actions">
+                        <button id="btn-undo" class="btn-text danger" style="display: none;">
+                            <i data-lucide="rotate-ccw"></i> Borrar último episodio
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MIDDLE ZONE -->
+                <div class="middle-stats-card">
+                    <div class="stat-group full-width">
+                        <span class="label">Desde el anterior episodio</span>
+                        <span id="time-since" class="value highlight">-- h -- min</span>
+                    </div>
+                </div>
+
+                <!-- BOTTOM ZONE: 5-Day Summary -->
+                <div class="weekly-list">
+                    <div class="list-header">
+                        <h3>Resumen últimos 3 días</h3>
+                        <button id="btn-manual-entry" class="btn-text-action">+ Añadir pasado</button>
+                    </div>
+                    <ul id="weekly-list-container">
+                        <!-- List items injected here -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- STATS VIEW -->
+            <section id="stats" class="view" style="display: none;">
+                <div class="stats-header">
+                    <h2>Estadísticas</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+                <div class="detailed-stats">
+                    <div class="detailed-stats">
+                        <div class="stat-row">
+                            <span>Total Histórico:</span>
+                            <strong id="stat-total-history">--</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Promedio Diario:</span>
+                            <strong id="stat-daily-avg">--</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Promedio Intervalo:</span>
+                            <strong id="stat-interval-avg">--</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Intervalo Mín:</span>
+                            <strong id="stat-min-interval">--</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Intervalo Máx:</span>
+                            <strong id="stat-max-interval">--</strong>
+                        </div>
+                    </div>
+                    <!-- Export button -->
+                    <button id="btn-export" class="btn-secondary">Exportar CSV</button>
+            </section>
+        </main>
+
+        <nav class="app-nav">
+            <button class="nav-btn active" data-target="dashboard">
+                <i data-lucide="activity"></i>
+                <span>Registro</span>
+            </button>
+            <button class="nav-btn" data-target="stats">
+                <i data-lucide="bar-chart-2"></i>
+                <span>Datos</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Day Details Modal -->
+    <dialog id="day-details-modal">
+        <div class="modal-header">
+            <h3 id="modal-date-title">Detalles del Día</h3>
+            <button class="btn-close" id="btn-close-modal">×</button>
+        </div>
+        <div class="modal-body">
+            <ul id="day-episodes-list">
+                <!-- Episodes injected here -->
+            </ul>
+        </div>
+    </dialog>
+
+    <!-- Edit Time Modal -->
+    <dialog id="edit-time-modal">
+        <form method="dialog">
+            <h3>Editar Episodio</h3>
+            <div class="input-group">
+                <label for="edit-time-input">Hora</label>
+                <input type="time" id="edit-time-input" required>
+            </div>
+            <div class="input-group">
+                <label for="edit-notes-input">Notas (opcional)</label>
+                <textarea id="edit-notes-input" rows="3" placeholder="Añadir notas..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button value="cancel" class="btn-secondary">Cancelar</button>
+                <button value="save" class="btn-primary">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Manual Entry Modal -->
+    <dialog id="manual-entry-modal">
+        <form method="dialog">
+            <h3>Registrar Pasado</h3>
+            <div class="input-group">
+                <label for="manual-date">Fecha</label>
+                <input type="date" id="manual-date" required>
+            </div>
+            <div class="input-group">
+                <label for="manual-time">Hora</label>
+                <input type="time" id="manual-time" required>
+            </div>
+            <div class="input-group">
+                <label for="manual-notes">Notas (opcional)</label>
+                <textarea id="manual-notes" rows="3" placeholder="Añadir notas..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button value="cancel" class="btn-secondary">Cancelar</button>
+                <button value="save" class="btn-primary">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Confirm Modal -->
+    <dialog id="confirm-modal">
+        <form method="dialog">
+            <h3>¿Borrar último registro?</h3>
+            <p>Esta acción no se puede deshacer.</p>
+            <div class="modal-actions">
+                <button value="cancel" class="btn-secondary">Cancelar</button>
+                <button value="confirm" class="btn-danger">Borrar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="app.js" defer></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
